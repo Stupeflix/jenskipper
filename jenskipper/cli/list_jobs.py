@@ -13,4 +13,4 @@ def list_jobs(base_dir):
     """
     jobs_defs = repository.get_jobs_defs(base_dir)
     for name in sorted(jobs_defs):
-        print name
+        print(name)

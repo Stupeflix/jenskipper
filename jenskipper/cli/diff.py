@@ -7,6 +7,7 @@ try:
 except ImportError:
     HAVE_LXML = False
 import click
+import six
 
 from . import decorators
 from .. import utils
@@ -85,7 +86,7 @@ def print_job_diff(session, base_dir, job_name, context_overrides=None,
                         context_overrides=context_overrides, reverse=reverse)
     if names_only:
         if diff:
-            print job_name
+            print(job_name)
     else:
         _print_diff(diff)
     return len(diff)
@@ -106,8 +107,8 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
     remote_xml = jenkins_api.get_job_config(session, job_name)
     with utils.add_lxml_syntax_error_context(remote_xml, job_name):
         remote_xml = _prepare_xml(remote_xml)
-    from_text = remote_xml
-    to_text = local_xml
+    from_text = six.text_type(remote_xml)
+    to_text = six.text_type(local_xml)
     from_file = 'remote/%s.xml' % job_name
     to_file = 'local/%s.xml' % job_name
     if reverse:
@@ -121,9 +122,9 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
 def _prepare_xml(xml):
     xml = utils.clean_xml(xml)
     xml = utils.unescape_xml(xml)
-    xml = xml.replace('\r\n', '\n')
+    xml = xml.replace(b'\r\n', b'\n')
     _, xml = jobs.extract_hash_from_description(xml)
-    return xml.splitlines(True)
+    return xml.splitlines(False)
 
 
 def _print_diff(diff):

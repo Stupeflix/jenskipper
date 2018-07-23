@@ -6,6 +6,7 @@ import collections
 import logging
 
 import click
+from six.moves import reduce
 
 from . import decorators
 from .. import repository
@@ -22,7 +23,7 @@ def print_dirty_jobs(jobs_names, base_dir):
     Print the list of jobs with uncommitted changes in the current repository.
     """
     dirty_jobs = get_dirty_jobs(base_dir, jobs_names)
-    print '\n'.join(sorted(dirty_jobs))
+    print('\n'.join(sorted(dirty_jobs)))
 
 
 def get_dirty_jobs(base_dir, jobs_names=None):

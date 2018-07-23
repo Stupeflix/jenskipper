@@ -13,5 +13,5 @@ def show(job_name, base_dir, context_overrides):
     """
     Show the rendered XML of JOB_NAME.
     """
-    print repository.get_job_conf(base_dir, job_name,
-                                  context_overrides=context_overrides)[0]
+    print(repository.get_job_conf(base_dir, job_name,
+                                  context_overrides=context_overrides)[0])

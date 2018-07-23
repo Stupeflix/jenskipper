@@ -37,7 +37,7 @@ def get_artifact(context, base_dir, job_name, artifact, build, node_name,
     """
     session = jenkins_api.auth(base_dir)
     real_build = _resolve_build(context, session, base_dir, job_name, build)
-    print >> sys.stderr, 'Build number: %s' % real_build
+    print('Build number: %s' % real_build, file=sys.stderr)
     response = jenkins_api.get_artifact(session,
                                         job_name,
                                         real_build,

@@ -1,19 +1,20 @@
 import sys
 
 import jinja2
+import six
 
 from jenskipper import templates
 from jenskipper import exceptions
 
 
 def test_render(data_dir):
-    rendered, _ = templates.render(unicode(data_dir), 'template.txt',
+    rendered, _ = templates.render(six.text_type(data_dir), 'template.txt',
                                    {'name': 'John'})
     assert rendered == 'My name is John'
 
 
 def test_render_with_overrides(data_dir):
-    rendered, _ = templates.render(unicode(data_dir),
+    rendered, _ = templates.render(six.text_type(data_dir),
                                    'template.txt',
                                    {'name': 'John'},
                                    context_overrides={'name': 'Jane'})
@@ -24,7 +25,7 @@ def test_extract_jinja_error_undefined_variable(data_dir):
     tpl_name = 'template.txt'
     tpl_path = data_dir.join(tpl_name)
     try:
-        templates.render(unicode(data_dir), tpl_name, {})
+        templates.render(six.text_type(data_dir), tpl_name, {})
     except jinja2.UndefinedError:
         stack, error = templates.extract_jinja_error(sys.exc_info())
     assert stack == [
@@ -37,7 +38,7 @@ def test_extract_jinja_error_undefined_variable(data_dir):
 def test_extract_jinja_error_syntax_error(data_dir):
     tpl_name = 'template_with_syntax_error.txt'
     try:
-        templates.render(unicode(data_dir), tpl_name, {})
+        templates.render(six.text_type(data_dir), tpl_name, {})
     except jinja2.TemplateSyntaxError:
         stack, error = templates.extract_jinja_error(sys.exc_info())
     tpl_path = data_dir.join(tpl_name)
@@ -52,10 +53,10 @@ def test_extract_jinja_error_syntax_error(data_dir):
 def test_extract_jinja_error_with_fnames_prefix(data_dir):
     tpl_name = 'template.txt'
     try:
-        templates.render(unicode(data_dir), tpl_name, {})
+        templates.render(six.text_type(data_dir), tpl_name, {})
     except jinja2.UndefinedError:
         stack, error = templates.extract_jinja_error(sys.exc_info(),
-                                                     unicode(data_dir))
+                                                     six.text_type(data_dir))
     assert stack == [
         '  File "template.txt", line 1',
         '    My name is {{ name }}',
@@ -64,7 +65,7 @@ def test_extract_jinja_error_with_fnames_prefix(data_dir):
 
 
 def test_track_includes(data_dir):
-    rendered, loaded_files = templates.render(unicode(data_dir),
+    rendered, loaded_files = templates.render(six.text_type(data_dir),
                                               'template_with_include.txt',
                                               {'name': 'Jane'})
     assert rendered == 'My name is Jane'
@@ -77,7 +78,7 @@ def test_track_includes(data_dir):
 def test_template_with_raise(data_dir):
     tpl_name = 'template_with_raise.txt'
     try:
-        templates.render(unicode(data_dir), tpl_name, {})
+        templates.render(six.text_type(data_dir), tpl_name, {})
     except exceptions.TemplateUserError:
         stack, error = templates.extract_jinja_error(sys.exc_info())
     tpl_path = data_dir.join(tpl_name)

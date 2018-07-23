@@ -1,9 +1,8 @@
-import urlparse
-import urllib
-
 import click
 import requests
 import re
+from six.moves import urllib
+from six.moves.urllib import parse as urlparse
 
 from . import conf
 from . import exceptions

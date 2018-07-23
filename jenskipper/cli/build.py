@@ -105,7 +105,7 @@ def print_build_result(session, base_dir, job_name, build_url, result=None,
         if not runs_urls:
             log = jenkins_api.get_build_log(session, build_url)
             _print_marker('Beginning of "%s" logs' % job_name.encode('utf8'))
-            print log.rstrip()
+            print(log.rstrip())
             _print_marker('End of "%s" logs' % job_name.encode('utf8'))
         for run_url in runs_urls:
             run_info = jenkins_api.get_object(session, run_url)
@@ -120,9 +120,9 @@ def print_build_result(session, base_dir, job_name, build_url, result=None,
 
 
 def _print_marker(text, marker='-', width=79):
-    print marker * width
-    print text.center(width)
-    print marker * width
+    print(marker * width)
+    print(text.center(width))
+    print(marker * width)
 
 
 def _get_builds_urls(session, queue_urls):

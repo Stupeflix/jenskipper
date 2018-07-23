@@ -37,7 +37,7 @@ def test_topo_sort_cyclic_dependency():
     graph.add_edges_list((1, 3), (2, 3), (3, 1))
     with pytest.raises(CyclicDependency) as excinfo:
         digraph.topo_sort(graph)
-    assert excinfo.value.nodes == [1, 3]
+    assert list(excinfo.value.nodes) == [1, 3]
 
 
 def test_remove_node():

@@ -1,3 +1,5 @@
+import six
+
 from . import digraph
 
 
@@ -31,7 +33,7 @@ def parse_pipelines(text):
     graph = digraph.DirectedGraph.parse(text)
     ret = {}
     for child, parents in graph.parents.items():
-        parents = sorted([unicode(p) for p in parents])
+        parents = sorted([six.text_type(p) for p in parents])
         first_parent = parents[0]
         edge = (first_parent, child)
         edge_repr = graph.edges_reprs[edge]

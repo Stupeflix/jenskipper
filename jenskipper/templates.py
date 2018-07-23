@@ -4,6 +4,7 @@ import jinja2
 import jinja2.nodes
 import jinja2.ext
 import click
+import six
 
 from . import utils
 from . import exceptions
@@ -89,7 +90,7 @@ def extract_jinja_error(exc_info, fnames_prefix=None):
         stack_lines.append(u'  File "%s", line %s' % (file_name, line))
         stack_lines.append(u'    %s' % text)
 
-    error_details = unicode(exc_value)
+    error_details = six.text_type(exc_value)
     error_details = error_details.rstrip('.')
     return stack_lines, u'%s: %s' % (prefix, error_details)
 

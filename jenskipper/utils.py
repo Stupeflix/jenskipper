@@ -4,6 +4,7 @@ import collections
 import contextlib
 
 import click
+import six
 
 
 try:
@@ -23,6 +24,8 @@ def clean_xml(text):
     text = text.strip()
     if HAVE_LXML:
         parser = etree.XMLParser(remove_blank_text=True)
+        if six.PY3 and isinstance(text, six.text_type):
+            text = text.encode('utf8')
         tree = etree.fromstring(text, parser)
         return etree.tostring(tree, pretty_print=True, xml_declaration=True,
                               encoding='UTF-8')

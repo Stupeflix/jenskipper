@@ -28,7 +28,7 @@ def get_job_status(context, base_dir, jobs_names, status_only):
     show_job_name = (len(jobs_names) > 1)
     for job_num, job_name in enumerate(jobs_names):
         if job_num and not status_only:
-            print
+            print()
         _print_job_status(context, session, base_dir, job_name, status_only,
                           show_job_name)
 
@@ -50,28 +50,28 @@ def _print_job_status(context, session, base_dir, job_name, status_only,
 
     status = _job_status(job_data)
     if status_only:
-        print "%s: %s" % (job_name, status)
+        print("%s: %s" % (job_name, status))
     else:
         if show_job_name:
             lines_prefix = '  '
             click.secho(job_name, fg='yellow', bold=True)
         else:
             lines_prefix = ''
-        print '%sStatus: %s' % (lines_prefix, status)
+        print('%sStatus: %s' % (lines_prefix, status))
         if status == 'never built':
             return
 
-        print '%sLast completed: %s' % (
+        print('%sLast completed: %s' % (
             lines_prefix,
             job_data['lastCompletedBuild']['number']
-        )
+        ))
         for key, fmt, _ in JOB_STATUS:
             build_data = job_data[key]
             if build_data is not None:
                 job_number = build_data['number']
             else:
                 job_number = 'none'
-            print lines_prefix + fmt % job_number
+            print(lines_prefix + fmt % job_number)
 
 
 def _job_status(job_data):

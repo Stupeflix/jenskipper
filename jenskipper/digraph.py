@@ -2,6 +2,9 @@ import copy
 from collections import defaultdict
 import shlex
 import pipes
+import functools
+
+import six
 
 from .exceptions import CyclicDependency
 
@@ -16,7 +19,7 @@ def split_connected_graphs(graph):
     graph = graph.copy()
     ret = []
     while graph.nodes:
-        node = graph.nodes.values()[0]
+        node = list(graph.nodes.values())[0]
         subgraph = DirectedGraph()
         for parent, child in list(graph.walk_edges_from(node)):
             subgraph.add_edge(parent, child)
@@ -114,7 +117,7 @@ class DirectedGraph(object):
         """
         Delete all detached nodes.
         """
-        for name in self.nodes.keys():
+        for name in list(self.nodes.keys()):
             if not self.children[name] and not self.parents[name]:
                 del self.nodes[name]
 
@@ -152,10 +155,10 @@ class DirectedGraph(object):
 
     def _format(self, parent_node, node, lines, cur_line, visited):
         if not cur_line and parent_node is not None:
-            cur_line.append(pipes.quote(unicode(parent_node)))
+            cur_line.append(pipes.quote(six.text_type(parent_node)))
         if parent_node is not None:
             cur_line.append(self.edges_reprs[(parent_node, node)])
-        cur_line.append(pipes.quote(unicode(node)))
+        cur_line.append(pipes.quote(six.text_type(node)))
         if node not in visited:
             visited.add(node)
             if self.children[node]:
@@ -191,6 +194,8 @@ class DirectedGraph(object):
         return graph
 
 
+@six.python_2_unicode_compatible
+@functools.total_ordering
 class Node(object):
     """
     A node of a :class:`DirectedGraph`.
@@ -210,14 +215,14 @@ class Node(object):
     def __eq__(self, other):
         return self.name == _get_node_name(other)
 
-    def __cmp__(self, other):
-        return cmp(self.name, _get_node_name(other))
+    def __lt__(self, other):
+        return self.name < _get_node_name(other)
 
     def __repr__(self):
         return '<Node %r>' % self.name
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return six.text_type(self.name)
 
 
 def _get_node_name(node):
