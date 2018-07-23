@@ -129,7 +129,7 @@ def _get_builds_urls(session, queue_urls):
     ret = {}
     queue_urls = queue_urls.copy()
     while True:
-        for job_name, queue_url in queue_urls.items():
+        for job_name, queue_url in list(queue_urls.items()):
             try:
                 queue_infos = jenkins_api.get_object(session, queue_url)
             except requests.HTTPError as exc:
@@ -156,7 +156,7 @@ def _poll_builds(session, builds_urls):
     ret = {}
     builds_urls = builds_urls.copy()
     while True:
-        for job_name, build_url in builds_urls.items():
+        for job_name, build_url in list(builds_urls.items()):
             build_infos = jenkins_api.get_object(session, build_url)
             result = build_infos['result']
             if result is not None:
