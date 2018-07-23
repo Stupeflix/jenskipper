@@ -46,10 +46,10 @@ def patch(context, jobs_names, base_dir, fname):
                                   stdin=subprocess.PIPE)
     # It's important to add a newline at the end of the patch, so patch can
     # distinguate the end of the file
-    patch = ''.join(diff_lines) + '\n'
+    patch = ''.join(diff_lines).encode('utf8') + b'\n'
     patch_stdout, patch_stderr = patch_proc.communicate(patch)
     if patch_proc.returncode != 0:
         click.secho('Patch failed:', fg='red', bold=True)
-        click.secho(patch_stdout.strip())
-        click.secho(patch_stderr.strip())
+        click.secho(patch_stdout.strip().decode('utf8'))
+        click.secho(patch_stderr.strip().decode('utf8'))
         context.exit(1)
