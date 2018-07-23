@@ -107,8 +107,8 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
     remote_xml = jenkins_api.get_job_config(session, job_name)
     with utils.add_lxml_syntax_error_context(remote_xml, job_name):
         remote_xml = _prepare_xml(remote_xml)
-    from_text = six.text_type(remote_xml)
-    to_text = six.text_type(local_xml)
+    from_text = remote_xml
+    to_text = local_xml
     from_file = 'remote/%s.xml' % job_name
     to_file = 'local/%s.xml' % job_name
     if reverse:
@@ -124,7 +124,8 @@ def _prepare_xml(xml):
     xml = utils.unescape_xml(xml)
     xml = xml.replace(b'\r\n', b'\n')
     _, xml = jobs.extract_hash_from_description(xml)
-    return xml.splitlines(False)
+    xml = xml.decode('utf8')
+    return xml.splitlines(True)
 
 
 def _print_diff(diff):
