@@ -66,10 +66,10 @@ def _get_vcs(base_dir):
 
 
 def _get_git_dirty_files(base_dir):
-    env = os.environ.copy()
-    env['GIT_DIR'] = op.join(base_dir, '.git')
-    git_output = subprocess.check_output(['git', 'status', '--porcelain'],
-                                         env=env)
+    git_output = subprocess.check_output(
+        ['git', '-C', base_dir, 'status', '--porcelain']
+    )
+    git_output = git_output.decode('utf8')
     ret = []
     for line in git_output.splitlines():
         fnames = line[3:].split()

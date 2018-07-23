@@ -1,5 +1,8 @@
 #### joe made this: http://goel.io/joe
 
+/tests/tmp
+/tests/cli/tmp
+
 #####=== Python ===#####
 
 # Byte-compiled / optimized / DLL files

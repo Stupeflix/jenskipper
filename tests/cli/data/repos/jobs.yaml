@@ -11,3 +11,6 @@ syntax_error:
 
 undefined_var:
   template: undefined_var.txt
+
+basic:
+  template: basic.txt

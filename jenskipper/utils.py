@@ -1,10 +1,11 @@
-from xml.etree import ElementTree
+import os
 import copy
 import collections
 import contextlib
 
 import click
 import six
+from xml.etree import ElementTree
 
 
 try:
@@ -205,3 +206,23 @@ def _flatten_dict(dct, ancestors=()):
         else:
             items.append((path, value))
     return items
+
+
+class cd(object):
+    """
+    A context manager that changes the current working directory.
+
+    If *path* is ``None``, don't do anything.
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        if self.path is not None:
+            self.prev_cwd = os.getcwd()
+            os.chdir(self.path)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.path is not None:
+            os.chdir(self.prev_cwd)
