@@ -7,5 +7,7 @@ matrix:
     - python: "3.7"
 before_install:
   - sudo apt-get install -y git
+  - git config --global user.email "foo@bar.com"
+  - git config --global user.name "Foo Bar"
 install: pip install tox-travis
 script: tox
