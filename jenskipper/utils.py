@@ -2,6 +2,7 @@ import os
 import copy
 import collections
 import contextlib
+import re
 
 import click
 import six
@@ -25,18 +26,41 @@ def clean_xml(text):
     text = text.strip()
     if HAVE_LXML:
         parser = etree.XMLParser(remove_blank_text=True)
-        if six.PY3 and isinstance(text, six.text_type):
-            text = text.encode('utf8')
+        if isinstance(text, six.text_type):
+            # lxml wants bytes if there is an encoding declaration in the XML
+            if re.search(r'<\?.*xml.*encoding=.*\?>', text):
+                text = text.encode('utf8')
         tree = etree.fromstring(text, parser)
-        return etree.tostring(tree, pretty_print=True, xml_declaration=True,
-                              encoding='UTF-8')
+        return etree.tostring(tree, pretty_print=True, encoding='unicode')
     else:
         return text
 
 
+def parse_xml(xml):
+    '''
+    Parse *xml* string with :mod:`xml.etree.ElementTree` and return the tree
+    object.
+
+    This should be preferred to using :func:`xml.etree.ElementTree.fromstring`
+    directly, as it contains tricks to handle unicode data properly on Python 2
+    and 3.
+    '''
+    if six.PY2 and isinstance(xml, six.text_type):
+        xml = xml.encode('utf8')
+    return ElementTree.fromstring(xml)
+
+
+def render_xml(tree):
+    '''
+    Render :mod:`xml.etree.ElementTree` *tree* to text.
+    '''
+    encoding = 'unicode' if six.PY3 else None
+    return ElementTree.tostring(tree, encoding=encoding, method='xml')
+
+
 def unescape_xml(xml):
-    tree = ElementTree.fromstring(xml)
-    return ElementTree.tostring(tree, encoding='UTF-8', method='xml')
+    tree = parse_xml(xml)
+    return render_xml(tree)
 
 
 def sechowrap(text, wrap_opts={}, **style):

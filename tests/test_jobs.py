@@ -8,7 +8,7 @@ from .asserts import assert_xml_strings_equal
 
 
 def test_extract_pipeline_conf(data_dir):
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     pipe_bits, conf = jobs.extract_pipeline_conf(conf)
     assert pipe_bits == (['stupeflix'], 'SUCCESS')
     assert_xml_strings_equal(conf, JOB_WITHOUT_PIPELINE)
@@ -17,18 +17,18 @@ def test_extract_pipeline_conf(data_dir):
 def test_merge_pipeline_conf(data_dir):
     merged = jobs.merge_pipeline_conf(JOB_WITHOUT_PIPELINE, ['stupeflix'],
                                       'SUCCESS')
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     assert_xml_strings_equal(merged, conf)
 
 
 def test_get_conf_hash(data_dir):
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     assert jobs.get_conf_hash(conf) == \
         '755f757faa53968a68a7b13851ce8052c7dfee97'
 
 
 def test_append_hash_in_description(data_dir):
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     rendered_conf = jobs.append_hash_in_description(conf)
     tree = ElementTree.fromstring(rendered_conf)
     elt = tree.find('.//description')
@@ -37,7 +37,7 @@ def test_append_hash_in_description(data_dir):
 
 
 def test_extract_hash_from_description(data_dir):
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     with_hash = jobs.append_hash_in_description(conf)
     conf_hash, without_hash = jobs.extract_hash_from_description(with_hash)
     assert conf_hash == '755f757faa53968a68a7b13851ce8052c7dfee97'
@@ -45,7 +45,7 @@ def test_extract_hash_from_description(data_dir):
 
 
 def test_extract_hash_from_description_without_hash(data_dir):
-    conf = data_dir.join('job_config.xml').open().read()
+    conf = data_dir.join('job_config.xml').read_text('utf8')
     conf_hash, unchanged_conf = jobs.extract_hash_from_description(conf)
     assert conf_hash is None
     assert_xml_strings_equal(unchanged_conf, conf)

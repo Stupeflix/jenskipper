@@ -122,9 +122,8 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
 def _prepare_xml(xml):
     xml = utils.clean_xml(xml)
     xml = utils.unescape_xml(xml)
-    xml = xml.replace(b'\r\n', b'\n')
+    xml = xml.replace('\r\n', '\n')
     _, xml = jobs.extract_hash_from_description(xml)
-    xml = xml.decode('utf8')
     return xml.splitlines(True)
 
 

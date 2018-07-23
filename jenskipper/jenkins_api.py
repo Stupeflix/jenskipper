@@ -1,7 +1,6 @@
 import click
 import requests
 import re
-from six.moves import urllib
 from six.moves.urllib import parse as urlparse
 
 from . import conf
@@ -91,7 +90,7 @@ def get_job_config(session, name):
         if exc.response.status_code == 404:
             raise exceptions.JobNotFound(name)
         raise
-    return resp.text.encode('utf8')
+    return resp.text
 
 
 def push_job_config(session, name, config, allow_create=True):
@@ -156,7 +155,7 @@ def create_job(session, name, conf):
     Create a new job named *name* with *conf* on server.
     """
     url = urlparse.urljoin(session.jenkins_url, '/createItem?name=%s' %
-                           urllib.quote_plus(name))
+                           urlparse.quote_plus(name))
     resp = session.post(url, conf, headers={'Content-Type': 'application/xml'})
     resp.raise_for_status()
 

@@ -104,9 +104,9 @@ def print_build_result(session, base_dir, job_name, build_url, result=None,
     if not only_log_failures or result != 'SUCCESS':
         if not runs_urls:
             log = jenkins_api.get_build_log(session, build_url)
-            _print_marker('Beginning of "%s" logs' % job_name.encode('utf8'))
+            _print_marker('Beginning of "%s" logs' % job_name)
             print(log.rstrip())
-            _print_marker('End of "%s" logs' % job_name.encode('utf8'))
+            _print_marker('End of "%s" logs' % job_name)
         for run_url in runs_urls:
             run_info = jenkins_api.get_object(session, run_url)
             print_build_result(session,
