@@ -1,6 +1,7 @@
 import click
 import requests
 import re
+import six
 from six.moves.urllib import parse as urlparse
 
 from . import conf
@@ -93,20 +94,32 @@ def get_job_config(session, name):
     return resp.text
 
 
+def _post_data(session, url, data, content_type='application/xml'):
+    """
+    POST data to *url*, properly encoding to bytes and setting Content-Type
+    header with charset if needed.
+    """
+    if isinstance(data, six.text_type):
+        data = data.encode('utf-8')
+        if 'charset' not in content_type:
+            content_type += '; charset=utf-8'
+    return session.post(url, data, headers={'content-type': content_type})
+
+
 def push_job_config(session, name, config, allow_create=True):
     """
     Replace the configuration of job *name* with *config* (a XML string) on the
     server.
 
     Raise a :class:`jenskipper.exceptions.JobTypeMismatch` error if the job
-    type being pushed does not match the server-side job type (e.g. trying to
+    type being pushed does not matcqh the server-side job type (e.g. trying to
     push a multi-configuration job on a freestyle job).
 
     If *allow_create* is true, attempt to create the job if it does not exist
     on the server.
     """
     url = _get_job_config_url(session, name)
-    resp = session.post(url, config)
+    resp = _post_data(session, url, config)
     try:
         resp.raise_for_status()
     except requests.HTTPError as exc:
@@ -156,7 +169,7 @@ def create_job(session, name, conf):
     """
     url = urlparse.urljoin(session.jenkins_url, '/createItem?name=%s' %
                            urlparse.quote_plus(name))
-    resp = session.post(url, conf, headers={'Content-Type': 'application/xml'})
+    resp = _post_data(session, url, conf, 'application/xml')
     resp.raise_for_status()
 
 
@@ -174,7 +187,7 @@ def build_job(session, job_name, parameters=None):
                                '/job/%s/buildWithParameters' % job_name)
     else:
         url = urlparse.urljoin(session.jenkins_url, '/job/%s/build' % job_name)
-    resp = session.post(url, parameters)
+    resp = _post_data(session, url, parameters)
     if resp.status_code == 400:
         raise exceptions.MissingParametrizedBuildParameters(job_name)
     if resp.status_code == 500:

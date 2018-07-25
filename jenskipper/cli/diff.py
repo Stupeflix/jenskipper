@@ -7,7 +7,6 @@ try:
 except ImportError:
     HAVE_LXML = False
 import click
-import six
 
 from . import decorators
 from .. import utils
