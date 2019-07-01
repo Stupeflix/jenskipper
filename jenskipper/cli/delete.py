@@ -1,4 +1,3 @@
-import sys
 import click
 import requests
 
@@ -20,7 +19,8 @@ RESULT_COLORS = {
 @decorators.repos_command
 @decorators.jobs_command(dirty_flag=True, default_to_all=False)
 @decorators.handle_all_errors()
-def delete(jobs_names, base_dir, confirm):
+@click.pass_context
+def delete(context, jobs_names, base_dir, confirm):
     """
     Delete jobs on the Jenkins server.
     """
@@ -47,4 +47,4 @@ def delete(jobs_names, base_dir, confirm):
                 click.secho('%s was not found' % name, fg='red')
                 exit_code = 5
 
-    sys.exit(exit_code)
+    context.exit(exit_code)
