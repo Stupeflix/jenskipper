@@ -24,23 +24,28 @@ RESULT_COLORS = {
 @decorators.repos_command
 @decorators.jobs_command(dirty_flag=True)
 @decorators.handle_all_errors()
-def build(jobs_names, base_dir, block, build_parameters):
+@click.pass_context
+def build(context, jobs_names, base_dir, block, build_parameters):
     """
     Trigger builds for JOBS.
     """
-    do_build(jobs_names, base_dir, block, build_parameters)
+    exit_code = do_build(jobs_names, base_dir, block, build_parameters)
+    context.exit(exit_code)
 
 
 def do_build(jobs_names, base_dir, block, build_parameters):
     jenkins_url = conf.get(base_dir, ['server', 'location'])
     queue_urls, jenkins_url = trigger_builds(jobs_names, base_dir, jenkins_url,
                                              build_parameters)
+    exit_code = 0
     if block:
         results = wait_for_builds(queue_urls, jenkins_url)
         for job_name, (build_url, result, runs_urls) in results.items():
             jenkins_url = print_build_result(base_dir, jenkins_url, job_name,
                                              build_url, result, runs_urls)
-        sys.exit(any(r != 'SUCCESS' for r in results.values()))
+        if any(r[1] != 'SUCCESS' for r in results.values()):
+            exit_code = 1
+    return exit_code
 
 
 def trigger_builds(jobs_names, base_dir, jenkins_url, parameters):
