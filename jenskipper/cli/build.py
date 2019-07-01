@@ -1,4 +1,3 @@
-import sys
 import time
 
 import requests
@@ -150,7 +149,7 @@ def _get_builds_urls(jenkins_url, queue_urls):
     _, username, password = utils.split_auth_in_url(jenkins_url)
     ret = {}
     queue_urls = queue_urls.copy()
-    while queue_urls:
+    while True:
         for job_name, queue_url in queue_urls.items():
             try:
                 queue_infos = jenkins_api.get_object(jenkins_url, queue_url)
@@ -168,6 +167,8 @@ def _get_builds_urls(jenkins_url, queue_urls):
                 if 'executable' in queue_infos:
                     ret[job_name] = queue_infos['executable']['url']
                     del queue_urls[job_name]
+        if not queue_urls:
+            break
         time.sleep(1)
     return ret
 
@@ -175,7 +176,7 @@ def _get_builds_urls(jenkins_url, queue_urls):
 def _poll_builds(jenkins_url, builds_urls):
     ret = {}
     builds_urls = builds_urls.copy()
-    while builds_urls:
+    while True:
         for job_name, build_url in builds_urls.items():
             build_infos = jenkins_api.get_object(jenkins_url, build_url)
             result = build_infos['result']
@@ -183,6 +184,8 @@ def _poll_builds(jenkins_url, builds_urls):
                 runs_urls = _get_runs_urls(build_infos)
                 ret[job_name] = (build_url, result, runs_urls)
                 del builds_urls[job_name]
+        if not builds_urls:
+            break
         time.sleep(1)
     return ret
 
