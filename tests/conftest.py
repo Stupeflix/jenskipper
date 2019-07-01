@@ -1,4 +1,10 @@
+import os
+import os.path as op
+
 import pytest
+
+
+HERE = op.dirname(__file__)
 
 
 @pytest.fixture
@@ -21,3 +27,10 @@ def tmp_dir(request):
         tmp_dir.remove()
     tmp_dir.mkdir()
     return tmp_dir
+
+
+@pytest.fixture(scope='session', autouse=True)
+def setup_cli_env_vars():
+    cli_data_dir = op.join(HERE, 'cli', 'data')
+    os.environ['JK_USER_CONF'] = op.join(cli_data_dir, 'jenskipper.conf')
+    os.environ['JK_DIR'] = op.join(cli_data_dir, 'repos')
