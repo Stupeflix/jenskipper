@@ -14,7 +14,10 @@ THIS_DIR = op.dirname(__file__)
 
 
 def get_user_conf_fname():
-    return op.expanduser(op.join('~', '.config', 'jenskipper.conf'))
+    return os.environ.get(
+        'JK_USER_CONF',
+        op.expanduser(op.join('~', '.config', 'jenskipper.conf'))
+    )
 
 
 def get_user_conf():
