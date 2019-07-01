@@ -38,6 +38,7 @@ setup(
             'pytest-cov',
             'lxml',
             'sphinx',
+            'requests-mock',
         ],
     },
     entry_points={
