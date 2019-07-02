@@ -1,5 +1,7 @@
 default_job:
   template: default_job.txt
+  context:
+    name: job
 
 missing_template:
   template: no_template.xml

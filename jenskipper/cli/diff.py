@@ -1,5 +1,4 @@
 import difflib
-import sys
 import logging
 
 try:
@@ -30,7 +29,9 @@ logger = logging.getLogger(__name__)
 @decorators.jobs_command(dirty_flag=True)
 @decorators.context_command
 @decorators.handle_all_errors()
-def diff(jobs_names, base_dir, context_overrides, reverse, names_only):
+@click.pass_context
+def diff(context, jobs_names, base_dir, context_overrides, reverse,
+         names_only):
     """
     Show diffs between JOBS in the local repository and on the server.
 
@@ -62,9 +63,9 @@ def diff(jobs_names, base_dir, context_overrides, reverse, names_only):
             utils.sechowrap('Unknown job: %s' % job_name, fg='red', bold=True)
             utils.sechowrap('Job is present in the local repository, but not '
                             'on the Jenkins server.', fg='red')
-            sys.exit(2)
+            context.exit(2)
     ret_code = 3 if ret_code != 0 else 0
-    sys.exit(ret_code)
+    context.exit(ret_code)
 
 
 def print_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
