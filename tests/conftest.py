@@ -30,7 +30,22 @@ def tmp_dir(request):
 
 
 @pytest.fixture(scope='session', autouse=True)
-def setup_cli_env_vars():
+def setup_global_cli_env_vars():
     cli_data_dir = op.join(HERE, 'cli', 'data')
-    os.environ['JK_USER_CONF'] = op.join(cli_data_dir, 'jenskipper.conf')
-    os.environ['JK_DIR'] = op.join(cli_data_dir, 'repos')
+    _setup_cli_env_vars(cli_data_dir)
+
+
+@pytest.fixture
+def setup_cli_env_vars(request):
+    prev_vars = _setup_cli_env_vars(request.param)
+    yield
+    os.environ.update(prev_vars)
+
+
+def _setup_cli_env_vars(base_dir):
+    prev_vars = {}
+    for key, basename in [('JK_USER_CONF', 'jenskipper.conf'),
+                          ('JK_DIR', 'repos')]:
+        prev_vars[key] = os.environ.get(key)
+        os.environ[key] = op.join(base_dir, basename)
+    return prev_vars

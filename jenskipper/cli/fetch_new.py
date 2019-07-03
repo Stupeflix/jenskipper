@@ -1,5 +1,3 @@
-import sys
-
 import click
 
 from . import decorators
@@ -17,7 +15,8 @@ from .. import utils
               'existing files.')
 @decorators.repos_command
 @decorators.handle_all_errors()
-def fetch_new(base_dir, force, selected_jobs):
+@click.pass_context
+def fetch_new(context, base_dir, force, selected_jobs):
     """
     Fetch new jobs in an existing repository.
 
@@ -34,7 +33,7 @@ def fetch_new(base_dir, force, selected_jobs):
         unknown_jobs = set(selected_jobs).difference(new_jobs)
         if unknown_jobs:
             click.secho('Unknown jobs: %s' % ', '.join(unknown_jobs))
-            sys.exit(2)
+            context.exit(2)
         new_jobs = new_jobs.intersection(selected_jobs)
     if new_jobs:
         try:
@@ -49,7 +48,7 @@ def fetch_new(base_dir, force, selected_jobs):
             click.secho('File already exists: %s' % exc, fg='red',
                         bold=True)
             click.secho('Use --force to overwrite', fg='green')
-            sys.exit(2)
+            context.exit(2)
         import_.write_jobs_defs(base_dir, jobs_templates, 'a', pad_lines=1)
         import_.write_pipelines(base_dir, pipes_bits, 'a')
     utils.print_jobs_list('New jobs:', new_jobs, empty_label='No new jobs',
