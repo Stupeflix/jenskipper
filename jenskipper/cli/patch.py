@@ -1,5 +1,4 @@
 import subprocess
-import sys
 
 import click
 
@@ -16,7 +15,8 @@ from . import diff
 @decorators.handle_all_errors()
 @click.argument('fname', type=click.Path(exists=True, dir_okay=False,
                                          writable=True))
-def patch(jobs_names, base_dir, fname):
+@click.pass_context
+def patch(context, jobs_names, base_dir, fname):
     """
     Try to patch FNAME with the diff between local and remote versions of a
     job.
@@ -37,7 +37,7 @@ def patch(jobs_names, base_dir, fname):
         utils.sechowrap('Unknown job: %s' % job_name, fg='red', bold=True)
         utils.sechowrap('Job is present in the local repository, but not '
                         'on the Jenkins server.', fg='red')
-        sys.exit(1)
+        context.exit(1)
 
     # Patch output file
     patch_proc = subprocess.Popen(['patch', '--no-backup-if-mismatch', fname],
@@ -52,4 +52,4 @@ def patch(jobs_names, base_dir, fname):
         click.secho('Patch failed:', fg='red', bold=True)
         click.secho(patch_stdout.strip())
         click.secho(patch_stderr.strip())
-        sys.exit(1)
+        context.exit(1)

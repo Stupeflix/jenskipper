@@ -14,7 +14,8 @@ def test_diff_reverse(requests_mock):
 
 
 def test_no_diff(requests_mock):
-    requests_mock.get('/job/default_job/config.xml', text='<xml>job</xml>')
+    requests_mock.get('/job/default_job/config.xml',
+                      text='<xml><name>job</name></xml>')
     assert diff.diff(['default_job'], standalone_mode=False) == 0
 
 
