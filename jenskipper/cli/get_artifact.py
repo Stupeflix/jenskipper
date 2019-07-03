@@ -30,13 +30,15 @@ BUILD_SHORTCUTS = {
               'stdout).')
 @decorators.repos_command
 @decorators.handle_all_errors()
-def get_artifact(base_dir, job_name, artifact, build, node_name, output_file):
+@click.pass_context
+def get_artifact(context, base_dir, job_name, artifact, build, node_name,
+                 output_file):
     """
     Download an artifact.
     """
     jenkins_url = conf.get(base_dir, ['server', 'location'])
-    real_build, jenkins_url = _resolve_build(base_dir, jenkins_url, job_name,
-                                             build)
+    real_build, jenkins_url = _resolve_build(context, base_dir, jenkins_url,
+                                             job_name, build)
     print >> sys.stderr, 'Build number: %s' % real_build
     response, jenkins_url = jenkins_api.handle_auth(
         base_dir,
@@ -56,7 +58,7 @@ def get_artifact(base_dir, job_name, artifact, build, node_name, output_file):
             utils.sechowrap('Unexpected HTTP error %s while trying to '
                             'retrieve artifact' % response.status_code,
                             fg='red')
-        sys.exit(1)
+        context.exit(1)
     _write_response(response, output_file)
 
 
@@ -65,13 +67,13 @@ def _write_response(response, output_file):
         output_file.write(data)
 
 
-def _resolve_build(base_dir, jenkins_url, job_name, build):
+def _resolve_build(context, base_dir, jenkins_url, job_name, build):
     if build not in BUILD_SHORTCUTS:
         try:
             return int(build), jenkins_url
         except ValueError:
             utils.sechowrap('Invalid build: %s' % build, fg='red')
-            sys.exit(1)
+            context.exit(1)
     try:
         job_data, jenkins_url = jenkins_api.handle_auth(base_dir,
                                                         jenkins_api.get_object,
@@ -84,10 +86,10 @@ def _resolve_build(base_dir, jenkins_url, job_name, build):
             utils.sechowrap('Unexpected HTTP error %s while trying to '
                             'retrieve job data' % exc.response.status_code,
                             fg='red')
-        sys.exit(1)
+        context.exit(1)
     build_data = job_data[BUILD_SHORTCUTS[build]]
     if build_data is None:
         utils.sechowrap('No build data found for: %s' % build, fg='red')
-        sys.exit(1)
+        context.exit(1)
     real_build = build_data['number']
     return real_build, jenkins_url
