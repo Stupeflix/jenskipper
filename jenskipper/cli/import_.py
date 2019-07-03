@@ -1,7 +1,5 @@
 import os
 import os.path as op
-import sys
-
 import click
 
 from . import decorators
@@ -18,14 +16,15 @@ from .. import utils
 @click.argument('jenkins_url')
 @click.argument('dest_dir')
 @decorators.handle_all_errors(for_repos_command=False)
-def import_(jenkins_url, dest_dir):
+@click.pass_context
+def import_(context, jenkins_url, dest_dir):
     """
     Import jobs from JENKINS_URL into DEST_DIR.
     """
     if op.exists(dest_dir):
         utils.sechowrap('Destination dir "%s" already exists' % dest_dir,
                         fg='red', bold=True)
-        sys.exit(1)
+        context.exit(1)
     jobs_names, jenkins_url = jenkins_api.handle_auth(dest_dir,
                                                       jenkins_api.list_jobs,
                                                       jenkins_url)
