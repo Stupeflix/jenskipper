@@ -1,6 +1,5 @@
 import click
 import requests
-import sys
 
 from . import decorators
 from .. import jenkins_api
@@ -21,7 +20,8 @@ JOB_STATUS = (
 @decorators.repos_command
 @decorators.jobs_command(allow_unknown=True)
 @decorators.handle_all_errors()
-def get_job_status(base_dir, jobs_names, status_only):
+@click.pass_context
+def get_job_status(context, base_dir, jobs_names, status_only):
     """
     Retrieve the status of a job.
     """
@@ -30,11 +30,11 @@ def get_job_status(base_dir, jobs_names, status_only):
     for job_num, job_name in enumerate(jobs_names):
         if job_num and not status_only:
             print
-        jenkins_url = _print_job_status(base_dir, jenkins_url, job_name,
-                                        status_only, show_job_name)
+        jenkins_url = _print_job_status(context, base_dir, jenkins_url,
+                                        job_name, status_only, show_job_name)
 
 
-def _print_job_status(base_dir, jenkins_url, job_name, status_only,
+def _print_job_status(context, base_dir, jenkins_url, job_name, status_only,
                       show_job_name):
     try:
         job_data, jenkins_url = jenkins_api.handle_auth(base_dir,
@@ -50,7 +50,7 @@ def _print_job_status(base_dir, jenkins_url, job_name, status_only,
                             'retrieve job data' % exc.response.status_code,
                             fg='red')
             exit_code = 1
-        sys.exit(exit_code)
+        context.exit(exit_code)
 
     status = _job_status(job_data)
     if status_only:
@@ -63,7 +63,7 @@ def _print_job_status(base_dir, jenkins_url, job_name, status_only,
             lines_prefix = ''
         print '%sStatus: %s' % (lines_prefix, status)
         if status == 'never built':
-            sys.exit(0)
+            return
 
         print '%sLast completed: %s' % (
             lines_prefix,
