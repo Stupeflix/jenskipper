@@ -1,6 +1,8 @@
+import os
 from click.testing import CliRunner
 
 from jenskipper.cli import diff
+from jenskipper import repository
 
 
 def test_diff(requests_mock):
@@ -13,9 +15,10 @@ def test_diff_reverse(requests_mock):
     assert diff.diff(['default_job', '--reverse'], standalone_mode=False) == 3
 
 
-def test_no_diff(requests_mock):
-    requests_mock.get('/job/default_job/config.xml',
-                      text='<xml><name>job</name></xml>')
+def test_no_diff(requests_mock, data_dir):
+    job_config = repository.get_job_conf(os.environ['JK_DIR'],
+                                         'default_job')[0]
+    requests_mock.get('/job/default_job/config.xml', text=job_config)
     assert diff.diff(['default_job'], standalone_mode=False) == 0
 
 

@@ -1,5 +1,3 @@
-import sys
-
 import click
 
 from . import decorators
@@ -22,23 +20,27 @@ from .. import exceptions
               is_flag=True)
 @click.option('--block/--no-block', 'block_builds', default=False,
               help='Block until builds are done and show their outcome.')
+@click.option('--confirm-replace/--no-confirm-replace', default=True,
+              help='Confirm before replacing jobs of different types.')
 @decorators.repos_command
 @decorators.jobs_command(dirty_flag=True)
 @decorators.context_command
 @decorators.build_command
 @decorators.handle_all_errors()
-def push(jobs_names, base_dir, force, allow_overwrite, context_overrides,
-         trigger_builds, block_builds, build_parameters):
+@click.pass_context
+def push(context, jobs_names, base_dir, force, allow_overwrite,
+         context_overrides, trigger_builds, block_builds, build_parameters,
+         confirm_replace):
     """
     Push JOBS to the Jenkins server.
 
     If no JOBS are specified, push all jobs.
     """
-    _check_push_flag(base_dir, force)
+    _check_push_flag(context, base_dir, force)
     jenkins_url = conf.get(base_dir, ['server', 'location'])
     jobs_defs = repository.get_jobs_defs(base_dir)
     pipelines = repository.get_pipelines(base_dir)
-    _check_for_gui_modifications(base_dir, jenkins_url, jobs_names,
+    _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
                                  allow_overwrite, context_overrides)
     remaining_jobs = list(jobs_names)
     while remaining_jobs:
@@ -49,8 +51,10 @@ def push(jobs_names, base_dir, force, allow_overwrite, context_overrides,
                                                        context_overrides)
         if mismatch_info:
             job_name, expected_type, pushed_type = mismatch_info
-            if _confirm_mismatching_job_type_overwrite(job_name, expected_type,
-                                                       pushed_type):
+            if _confirm_mismatching_job_type_overwrite(job_name,
+                                                       expected_type,
+                                                       pushed_type,
+                                                       confirm_replace):
                 _, jenkins_url = jenkins_api.handle_auth(
                     base_dir,
                     jenkins_api.delete_job,
@@ -66,7 +70,7 @@ def push(jobs_names, base_dir, force, allow_overwrite, context_overrides,
         build.do_build(jobs_names, base_dir, block_builds, build_parameters)
 
 
-def _check_for_gui_modifications(base_dir, jenkins_url, jobs_names,
+def _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
                                  allow_overwrite, context_overrides):
     if allow_overwrite:
         return
@@ -95,7 +99,7 @@ def _check_for_gui_modifications(base_dir, jenkins_url, jobs_names,
         utils.sechowrap('')
         utils.sechowrap('You can force push the jobs with the '
                         '--allow-overwrite flag', fg='red')
-        sys.exit(1)
+        context.exit(1)
 
 
 def _push_jobs(jobs_names, progress_bar, base_dir, jenkins_url, pipelines,
@@ -126,7 +130,7 @@ def _push_jobs(jobs_names, progress_bar, base_dir, jenkins_url, pipelines,
 
 
 def _confirm_mismatching_job_type_overwrite(job_name, expected_type,
-                                            pushed_type):
+                                            pushed_type, confirm_replace):
     utils.sechowrap('')
     utils.sechowrap('Failed to push %s.' % job_name, fg='red', bold=True)
     utils.sechowrap('')
@@ -135,13 +139,16 @@ def _confirm_mismatching_job_type_overwrite(job_name, expected_type,
     utils.sechowrap('  expected: %s' % expected_type, fg='red')
     utils.sechowrap('  pushed: %s' % pushed_type, fg='red')
     utils.sechowrap('')
-    return click.confirm(click.style(click.wrap_text(
-        'Do you want to delete the old job and replace it with this one? '
-        'you will loose all the builds history'
-    ), fg='yellow'))
+    if confirm_replace:
+        return click.confirm(click.style(click.wrap_text(
+            'Do you want to delete the old job and replace it with this one? '
+            'you will loose all the builds history'
+        ), fg='yellow'))
+    else:
+        return True
 
 
-def _check_push_flag(base_dir, force):
+def _check_push_flag(context, base_dir, force):
     if force or not conf.get(base_dir, ['server', 'forbid_push']):
         return
     utils.sechowrap('Pushes are not allowed for this repository', fg='red',
@@ -153,4 +160,4 @@ def _check_push_flag(base_dir, force):
     utils.sechowrap('')
     utils.sechowrap('If you really know what you\'re doing, you can use the '
                     '--force flag to push anyway.', fg='red')
-    sys.exit(1)
+    context.exit(1)
