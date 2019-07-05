@@ -1,7 +1,9 @@
 # -*- coding: utf8 -*-
+import os
+
 from jenskipper.cli import import_
 from jenskipper import utils
-from ..utils import serve_file
+from jenskipper import jenkins_api
 
 
 def test_import(requests_mock, tmp_dir):
@@ -25,12 +27,16 @@ def test_import_repos_dir_exists(requests_mock, tmp_dir):
     assert exit_code == 1
 
 
-def test_write_jobs_templates(httpserver, data_dir, tmp_dir):
+def test_write_jobs_templates_with_unicode_names(requests_mock, data_dir,
+                                                 tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
+    session = jenkins_api.auth(os.environ['JK_DIR'])
     repos_dir = tmp_dir.join('repos')
     data_dir.join('repos').copy(repos_dir)
-    job_config = serve_file(httpserver, data_dir.join('job_config.xml'))
-    pipe_bits, jobs_templates = import_.write_jobs_templates(str(repos_dir),
-                                                             httpserver.url,
+    job_config = data_dir.join('job_config.xml').read_text('utf8')
+    requests_mock.get('/job/%E2%82%AC/config.xml', text=job_config)
+    pipe_bits, jobs_templates = import_.write_jobs_templates(session,
+                                                             str(repos_dir),
                                                              ['€'])
     assert pipe_bits == {'€': (['stupeflix'], 'SUCCESS')}
     template_path = repos_dir.join('templates', '€.xml')

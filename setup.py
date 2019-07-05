@@ -34,7 +34,6 @@ setup(
     extras_require={
         'dev': [
             'pytest',
-            'pytest-localserver',
             'pytest-cov',
             'lxml',
             'sphinx',
