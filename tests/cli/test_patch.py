@@ -16,7 +16,8 @@ def test_patch(requests_mock, tmp_dir):
 </xml>
 '''
     requests_mock.get('/job/default_job/config.xml', text=new_content)
-    patch.patch(['default_job', str(dst_file)], standalone_mode=False)
+    ret = patch.patch(['default_job', str(dst_file)], standalone_mode=False)
+    assert ret is None
     assert dst_file.read() == new_content
 
 

@@ -6,8 +6,10 @@ def test_get_artifact(requests_mock, tmp_dir):
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', text='foo')
     artifact_path = tmp_dir.join('artifact')
-    get_artifact.get_artifact(['default_job', 'artifact', '--output-file',
-                               artifact_path], standalone_mode=False)
+    ret = get_artifact.get_artifact(['default_job', 'artifact',
+                                     '--output-file', artifact_path],
+                                    standalone_mode=False)
+    assert ret is None
     assert artifact_path.read() == 'foo'
 
 
@@ -27,9 +29,10 @@ def test_get_artifact_by_build_number(requests_mock, tmp_dir):
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', text='foo')
     artifact_path = tmp_dir.join('artifact')
-    get_artifact.get_artifact(['default_job', 'artifact', '--build', '1',
-                               '--output-file', artifact_path],
-                              standalone_mode=False)
+    ret = get_artifact.get_artifact(['default_job', 'artifact', '--build', '1',
+                                     '--output-file', artifact_path],
+                                    standalone_mode=False)
+    assert ret is None
     assert artifact_path.read() == 'foo'
 
 

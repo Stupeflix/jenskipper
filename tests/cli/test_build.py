@@ -7,7 +7,8 @@ def test_build(requests_mock):
         status_code=201,
         headers={'location': '/queue/default_job'}
     )
-    build.build(['default_job', '--no-block'], standalone_mode=False)
+    ret = build.build(['default_job', '--no-block'], standalone_mode=False)
+    assert ret == 0
 
 
 def test_build_block(requests_mock):
@@ -21,4 +22,5 @@ def test_build_block(requests_mock):
     requests_mock.get(queue_path + '/api/json',
                       json={'executable': {'url': build_url}})
     requests_mock.get(build_url + '/api/json', json={'result': 'SUCCESS'})
-    build.build(['default_job', '--block'], standalone_mode=False)
+    ret = build.build(['default_job', '--block'], standalone_mode=False)
+    assert ret == 0

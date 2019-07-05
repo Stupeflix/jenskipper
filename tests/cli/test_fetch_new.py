@@ -22,7 +22,8 @@ def test_fetch_new(requests_mock, data_dir, tmp_dir, setup_cli_env_vars):
                                                   {'name': 'new_job_2'}]})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     requests_mock.get('/job/new_job_2/config.xml', text=job_xml_2)
-    fetch_new.fetch_new([], standalone_mode=False)
+    ret = fetch_new.fetch_new([], standalone_mode=False)
+    assert ret is None
     disk_job_xml_1 = tmp_dir.join('repos', 'templates', 'new_job_1.xml').read()
     disk_job_xml_2 = tmp_dir.join('repos', 'templates', 'new_job_2.xml').read()
     assert disk_job_xml_1 == job_xml_1
@@ -47,7 +48,8 @@ def test_fetch_new_select_job(requests_mock, data_dir, tmp_dir,
                                                   {'name': 'new_job_2'}]})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     requests_mock.get('/job/new_job_2/config.xml', text=job_xml_2)
-    fetch_new.fetch_new(['new_job_1'], standalone_mode=False)
+    ret = fetch_new.fetch_new(['new_job_1'], standalone_mode=False)
+    assert ret is None
     disk_job_xml_1 = tmp_dir.join('repos', 'templates', 'new_job_1.xml').read()
     assert disk_job_xml_1 == job_xml_1
     assert not tmp_dir.join('repos', 'templates', 'new_job_2.xml').exists()
