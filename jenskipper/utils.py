@@ -1,5 +1,4 @@
 from xml.etree import ElementTree
-import urlparse
 import copy
 import collections
 import contextlib
@@ -47,37 +46,6 @@ def print_jobs_list(label, jobs_names, pad_lines=1, empty_label=None, **style):
         click.secho('%s\n  %s' % (label, '\n  '.join(jobs_names)), **style)
     elif empty_label:
         click.secho(empty_label)
-
-
-def replace_auth_in_url(url, username, password):
-    """
-    Put *username* and *password* in *url*.
-    """
-    parsed = urlparse.urlparse(url)
-    hostport = _get_hostport(parsed)
-    netloc = '%s:%s@%s' % (username, password, hostport)
-    replaced = parsed._replace(netloc=netloc)
-    return urlparse.urlunparse(replaced)
-
-
-def split_auth_in_url(url):
-    """
-    Extract authentification bits from *url*.
-
-    Return a ``(url_without_auth, username, password)`` tuple.
-    """
-    parsed = urlparse.urlparse(url)
-    hostport = _get_hostport(parsed)
-    without_auth = parsed._replace(netloc=hostport)
-    return urlparse.urlunparse(without_auth), parsed.username, parsed.password
-
-
-def transplant_url_auth(source_url, dest_url):
-    """
-    Take auth bits from *source_url* and put them in *dest_url*.
-    """
-    _, username, password = split_auth_in_url(source_url)
-    return replace_auth_in_url(dest_url, username, password)
 
 
 def _get_hostport(parsed_url):

@@ -36,17 +36,17 @@ def push(context, jobs_names, base_dir, force, allow_overwrite,
 
     If no JOBS are specified, push all jobs.
     """
+    session = jenkins_api.auth(base_dir)
     _check_push_flag(context, base_dir, force)
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
     jobs_defs = repository.get_jobs_defs(base_dir)
     pipelines = repository.get_pipelines(base_dir)
-    _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
+    _check_for_gui_modifications(context, session, base_dir, jobs_names,
                                  allow_overwrite, context_overrides)
     remaining_jobs = list(jobs_names)
     while remaining_jobs:
         with click.progressbar(remaining_jobs, label='Pushing jobs') as bar:
-            mismatch_info, remaining_jobs = _push_jobs(remaining_jobs, bar,
-                                                       base_dir, jenkins_url,
+            mismatch_info, remaining_jobs = _push_jobs(session, remaining_jobs,
+                                                       bar, base_dir,
                                                        pipelines, jobs_defs,
                                                        context_overrides)
         if mismatch_info:
@@ -55,10 +55,8 @@ def push(context, jobs_names, base_dir, force, allow_overwrite,
                                                        expected_type,
                                                        pushed_type,
                                                        confirm_replace):
-                _, jenkins_url = jenkins_api.handle_auth(
-                    base_dir,
-                    jenkins_api.delete_job,
-                    jenkins_url,
+                jenkins_api.delete_job(
+                    session,
                     job_name
                 )
             else:
@@ -70,19 +68,14 @@ def push(context, jobs_names, base_dir, force, allow_overwrite,
         build.do_build(jobs_names, base_dir, block_builds, build_parameters)
 
 
-def _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
+def _check_for_gui_modifications(context, session, base_dir, jobs_names,
                                  allow_overwrite, context_overrides):
     if allow_overwrite:
         return
     gui_was_modified = False
     for job_name in jobs_names:
         try:
-            conf, jenkins_url = jenkins_api.handle_auth(
-                base_dir,
-                jenkins_api.get_job_config,
-                jenkins_url,
-                job_name
-            )
+            conf = jenkins_api.get_job_config(session, job_name)
         except exceptions.JobNotFound:
             continue
         saved_hash, conf = jobs.extract_hash_from_description(conf)
@@ -91,8 +84,8 @@ def _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
             utils.sechowrap('It looks like job "%s" has been modified in the '
                             'Jenkins GUI:' % job_name, fg='red', bold=True)
             utils.sechowrap('')
-            diff.print_job_diff(base_dir, jenkins_url, job_name,
-                                context_overrides, reverse=True)
+            diff.print_job_diff(session, base_dir, job_name, context_overrides,
+                                reverse=True)
             utils.sechowrap('')
             gui_was_modified = True
     if gui_was_modified:
@@ -102,7 +95,7 @@ def _check_for_gui_modifications(context, base_dir, jenkins_url, jobs_names,
         context.exit(1)
 
 
-def _push_jobs(jobs_names, progress_bar, base_dir, jenkins_url, pipelines,
+def _push_jobs(session, jobs_names, progress_bar, base_dir, pipelines,
                jobs_defs, context_overrides):
     templates_dir = repository.get_templates_dir(base_dir)
     remaining_jobs = list(jobs_names)
@@ -115,10 +108,8 @@ def _push_jobs(jobs_names, progress_bar, base_dir, jenkins_url, pipelines,
                                         insert_hash=True,
                                         context_overrides=context_overrides)
         try:
-            _, jenkins_url = jenkins_api.handle_auth(
-                base_dir,
-                jenkins_api.push_job_config,
-                jenkins_url,
+            jenkins_api.push_job_config(
+                session,
                 job_name,
                 final_conf
             )

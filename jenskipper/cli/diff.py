@@ -12,7 +12,6 @@ from . import decorators
 from .. import utils
 from .. import repository
 from .. import jenkins_api
-from .. import conf
 from .. import jobs
 from .. import exceptions
 
@@ -51,11 +50,11 @@ def diff(context, jobs_names, base_dir, context_overrides, reverse,
         click.secho('This command works better if you install lxml:',
                     fg='yellow', bold=True)
         click.secho('  $ pip install lxml', fg='green')
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     ret_code = 0
     for job_name in jobs_names:
         try:
-            ret_code |= print_job_diff(base_dir, jenkins_url, job_name,
+            ret_code |= print_job_diff(session, base_dir, job_name,
                                        context_overrides, reverse=reverse,
                                        names_only=names_only)
         except exceptions.JobNotFound:
@@ -68,11 +67,11 @@ def diff(context, jobs_names, base_dir, context_overrides, reverse,
     context.exit(ret_code)
 
 
-def print_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
+def print_job_diff(session, base_dir, job_name, context_overrides=None,
                    reverse=False, names_only=False):
     """
     Print the diff between job *job_name* in the repository at *base_dir* and
-    the server at *jenkins_url*.
+    the server.
 
     *context_overrides* must be a dict of values overriding the local job
     context.
@@ -82,7 +81,7 @@ def print_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
 
     Return the number of lines in the diff.
     """
-    diff = get_job_diff(base_dir, jenkins_url, job_name,
+    diff = get_job_diff(session, base_dir, job_name,
                         context_overrides=context_overrides, reverse=reverse)
     if names_only:
         if diff:
@@ -92,7 +91,7 @@ def print_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
     return len(diff)
 
 
-def get_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
+def get_job_diff(session, base_dir, job_name, context_overrides=None,
                  reverse=False):
     """
     Get the diff lines printed by :func:`print_job_diff`.
@@ -104,10 +103,7 @@ def get_job_diff(base_dir, jenkins_url, job_name, context_overrides=None,
                                            context_overrides)
     with utils.add_lxml_syntax_error_context(local_xml, job_name):
         local_xml = _prepare_xml(local_xml)
-    remote_xml, _ = jenkins_api.handle_auth(base_dir,
-                                            jenkins_api.get_job_config,
-                                            jenkins_url,
-                                            job_name)
+    remote_xml = jenkins_api.get_job_config(session, job_name)
     with utils.add_lxml_syntax_error_context(remote_xml, job_name):
         remote_xml = _prepare_xml(remote_xml)
     from_text = remote_xml

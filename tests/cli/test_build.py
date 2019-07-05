@@ -2,6 +2,7 @@ from jenskipper.cli import build
 
 
 def test_build(requests_mock):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.post(
         '/job/default_job/build',
         status_code=201,
@@ -12,6 +13,7 @@ def test_build(requests_mock):
 
 
 def test_build_block(requests_mock):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     queue_path = '/queue/default_job'
     requests_mock.post(
         '/job/default_job/build',

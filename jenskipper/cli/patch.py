@@ -3,8 +3,8 @@ import subprocess
 import click
 
 from .. import utils
-from .. import conf
 from .. import exceptions
+from .. import jenkins_api
 from . import decorators
 from . import diff
 
@@ -25,13 +25,13 @@ def patch(context, jobs_names, base_dir, fname):
     macros. Always check your diffs before commiting changes made by this
     command.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
 
     # Get diff
     job_name = jobs_names[0]
     try:
-        diff_lines = diff.get_job_diff(base_dir, jenkins_url, job_name,
-                                       {}, reverse=True)
+        diff_lines = diff.get_job_diff(session, base_dir, job_name, {},
+                                       reverse=True)
     except exceptions.JobNotFound:
         utils.sechowrap('')
         utils.sechowrap('Unknown job: %s' % job_name, fg='red', bold=True)

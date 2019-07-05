@@ -19,7 +19,8 @@ def test_fetch_new(requests_mock, data_dir, tmp_dir, setup_cli_env_vars):
     job_xml_1 = '<xml>new_job_1</xml>'
     job_xml_2 = '<xml>new_job_2</xml>'
     requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'},
-                                                  {'name': 'new_job_2'}]})
+                                                  {'name': 'new_job_2'}],
+                                         'useCrumbs': False})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     requests_mock.get('/job/new_job_2/config.xml', text=job_xml_2)
     ret = fetch_new.fetch_new([], standalone_mode=False)
@@ -45,7 +46,8 @@ def test_fetch_new_select_job(requests_mock, data_dir, tmp_dir,
     job_xml_1 = '<xml>new_job_1</xml>'
     job_xml_2 = '<xml>new_job_2</xml>'
     requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'},
-                                                  {'name': 'new_job_2'}]})
+                                                  {'name': 'new_job_2'}],
+                                         'useCrumbs': False})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     requests_mock.get('/job/new_job_2/config.xml', text=job_xml_2)
     ret = fetch_new.fetch_new(['new_job_1'], standalone_mode=False)
@@ -63,7 +65,8 @@ def test_fetch_new_select_unknown_job(requests_mock, data_dir, tmp_dir,
     # create files in the repository
     data_dir.copy(tmp_dir)
 
-    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}]})
+    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}],
+                                         'useCrumbs': False})
     assert fetch_new.fetch_new(['new_job_2'], standalone_mode=False) == 2
 
 
@@ -76,7 +79,8 @@ def test_fetch_new_overwrite_error(requests_mock, data_dir, tmp_dir,
     data_dir.copy(tmp_dir)
 
     job_xml_1 = '<xml>new_job_1</xml>'
-    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}]})
+    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}],
+                                         'useCrumbs': False})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     template = tmp_dir.join('repos', 'templates', 'new_job_1.xml')
     template.write('foo')
@@ -93,7 +97,8 @@ def test_fetch_new_force_overwrite(requests_mock, data_dir, tmp_dir,
     data_dir.copy(tmp_dir)
 
     job_xml_1 = '<xml>new_job_1</xml>'
-    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}]})
+    requests_mock.get('/api/json', json={'jobs': [{'name': 'new_job_1'}],
+                                         'useCrumbs': False})
     requests_mock.get('/job/new_job_1/config.xml', text=job_xml_1)
     template = tmp_dir.join('repos', 'templates', 'new_job_1.xml')
     template.write('foo')

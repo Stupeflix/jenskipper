@@ -4,6 +4,7 @@ from jenskipper.cli import test
 
 
 def test_test(requests_mock):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     name_pattern = r'default_job%s\.[0-9a-f]{8}' % test.TEMP_JOBS_INFIX
     requests_mock.post(re.compile('/job/%s/config.xml' % name_pattern))
     queue_path = '/queue/default_job'

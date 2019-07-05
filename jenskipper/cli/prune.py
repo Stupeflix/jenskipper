@@ -4,7 +4,6 @@ from . import decorators
 from .. import jenkins_api
 from .. import repository
 from .. import utils
-from .. import conf
 
 
 @click.command()
@@ -17,19 +16,17 @@ def prune(base_dir, confirm):
     """
     Remove all jobs on the server that are not present in the repository.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     repos_jobs = repository.get_jobs_defs(base_dir)
-    server_jobs, jenkins_url = jenkins_api.handle_auth(base_dir,
-                                                       jenkins_api.list_jobs,
-                                                       jenkins_url)
+    server_jobs = jenkins_api.list_jobs(session)
     unknown_jobs = set(server_jobs).difference(repos_jobs)
     if unknown_jobs:
-        _confirm_and_delete(base_dir, unknown_jobs, confirm, jenkins_url)
+        _confirm_and_delete(session, base_dir, unknown_jobs, confirm)
     else:
         utils.sechowrap('Nothing to delete')
 
 
-def _confirm_and_delete(base_dir, unknown_jobs, confirm, jenkins_url):
+def _confirm_and_delete(session, base_dir, unknown_jobs, confirm):
     utils.sechowrap('The following jobs are present on the server but not in '
                     'the local repository:', fg='yellow')
     click.secho('  ' + '\n  '.join(sorted(unknown_jobs)), fg='yellow')
@@ -43,7 +40,4 @@ def _confirm_and_delete(base_dir, unknown_jobs, confirm, jenkins_url):
         delete = True
     if delete:
         for job in unknown_jobs:
-            _, jenkins_url = jenkins_api.handle_auth(base_dir,
-                                                     jenkins_api.delete_job,
-                                                     jenkins_url,
-                                                     job)
+            jenkins_api.delete_job(session, job)

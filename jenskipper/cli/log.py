@@ -2,9 +2,7 @@ import click
 
 from . import build
 from . import decorators
-from .. import conf
 from .. import jenkins_api
-from .. import utils
 
 
 @click.command()
@@ -21,9 +19,9 @@ def log(jobs_names, base_dir, build_number, show_all):
 
     If no JOBS are specified, show logs of all jobs.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     for job_name in jobs_names:
-        builds, jenkins_url = _get_job_builds(jenkins_url, base_dir, job_name)
+        builds = _get_job_builds(session, base_dir, job_name)
         if builds:
             if build_number is not None:
                 build_url, real_build_number = _search_build_url(builds,
@@ -31,12 +29,11 @@ def log(jobs_names, base_dir, build_number, show_all):
             else:
                 build_url = builds[0]['url']
                 real_build_number = builds[0]['number']
-            build_url = utils.transplant_url_auth(jenkins_url, build_url)
             if build_url is not None:
                 job_name_with_build = '%s #%s' % (job_name, real_build_number)
-                jenkins_url = build.print_build_result(
+                build.print_build_result(
+                    session,
                     base_dir,
-                    jenkins_url,
                     job_name_with_build,
                     build_url,
                     only_log_failures=not show_all,
@@ -48,15 +45,10 @@ def log(jobs_names, base_dir, build_number, show_all):
             click.secho('%s: no builds' % job_name, fg='yellow')
 
 
-def _get_job_builds(jenkins_url, base_dir, job_name):
+def _get_job_builds(session, base_dir, job_name):
     path = '/job/%s' % job_name
-    job_infos, jenkins_url = jenkins_api.handle_auth(
-        base_dir,
-        jenkins_api.get_object,
-        jenkins_url,
-        path
-    )
-    return job_infos['builds'], jenkins_url
+    job_infos = jenkins_api.get_object(session, path)
+    return job_infos['builds']
 
 
 def _search_build_url(builds, build_number):

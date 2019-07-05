@@ -21,29 +21,27 @@ def import_(context, jenkins_url, dest_dir):
     """
     Import jobs from JENKINS_URL into DEST_DIR.
     """
+    session = jenkins_api.auth(dest_dir, jenkins_url=jenkins_url)
     if op.exists(dest_dir):
         utils.sechowrap('Destination dir "%s" already exists' % dest_dir,
                         fg='red', bold=True)
         context.exit(1)
-    jobs_names, jenkins_url = jenkins_api.handle_auth(dest_dir,
-                                                      jenkins_api.list_jobs,
-                                                      jenkins_url)
+    jobs_names = jenkins_api.list_jobs(session)
     with click.progressbar(jobs_names, label='Importing jobs') as bar:
-        pipes_bits, jobs_templates = write_jobs_templates(dest_dir,
-                                                          jenkins_url,
+        pipes_bits, jobs_templates = write_jobs_templates(session,
+                                                          dest_dir,
                                                           bar)
     write_jobs_defs(dest_dir, jobs_templates, 'w')
     write_pipelines(dest_dir, pipes_bits, 'w')
     _write_default_contexts(dest_dir)
-    _write_conf(dest_dir, jenkins_url)
+    _write_conf(session, dest_dir)
     utils.print_jobs_list('Imported jobs:', jobs_names, fg='green')
 
 
-def write_jobs_templates(base_dir, jenkins_url, jobs_names,
-                         allow_overwrite=False):
+def write_jobs_templates(session, base_dir, jobs_names, allow_overwrite=False):
     """
-    Retrieve job templates *jobs_names* from *jenkins_url* server in repository
-    at *base_dir*.
+    Retrieve job templates *jobs_names* from server in repository at
+    *base_dir*.
 
     Return a ``(pipes_bits, jobs_templates)`` tuple, suitable for
     :func:`write_pipelines` and :func:`write_jobs_defs` respectively.
@@ -55,12 +53,7 @@ def write_jobs_templates(base_dir, jenkins_url, jobs_names,
     pipes_bits = {}
     jobs_templates = {}
     for job_name in jobs_names:
-        config, jenkins_url = jenkins_api.handle_auth(
-            base_dir,
-            jenkins_api.get_job_config,
-            jenkins_url,
-            job_name
-        )
+        config = jenkins_api.get_job_config(session, job_name)
         pipe_info, conf = jobs.extract_pipeline_conf(config)
         _, conf = jobs.extract_hash_from_description(config)
         if pipe_info is not None:
@@ -123,6 +116,5 @@ def _format_default_jobs_defs(jobs_templates, base_dir):
     return '\n'.join(lines)
 
 
-def _write_conf(base_dir, jenkins_url):
-    canonical_url, _, _ = utils.split_auth_in_url(jenkins_url)
-    conf.set_in_repos(base_dir, ['server', 'location'], canonical_url)
+def _write_conf(session, base_dir):
+    conf.set_in_repos(base_dir, ['server', 'location'], session.jenkins_url)

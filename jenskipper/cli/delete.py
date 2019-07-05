@@ -3,7 +3,6 @@ import requests
 
 from . import decorators
 from .. import jenkins_api
-from .. import conf
 
 
 RESULT_COLORS = {
@@ -24,7 +23,7 @@ def delete(context, jobs_names, base_dir, confirm):
     """
     Delete jobs on the Jenkins server.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     if confirm and jobs_names:
         question = click.style(click.wrap_text(
             'Are you sure you want to delete the following jobs on the '
@@ -36,12 +35,7 @@ def delete(context, jobs_names, base_dir, confirm):
     exit_code = 0
     for name in jobs_names:
         try:
-            jenkins_url = jenkins_api.handle_auth(
-                base_dir,
-                jenkins_api.delete_job,
-                jenkins_url,
-                name
-            )
+            jenkins_api.delete_job(session, name)
         except requests.HTTPError as exc:
             if exc.response.status_code == 404:
                 click.secho('%s was not found' % name, fg='red')

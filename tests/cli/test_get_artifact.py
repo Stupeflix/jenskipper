@@ -2,6 +2,7 @@ from jenskipper.cli import get_artifact
 
 
 def test_get_artifact(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json',
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', text='foo')
@@ -14,6 +15,7 @@ def test_get_artifact(requests_mock, tmp_dir):
 
 
 def test_get_artifact_not_found(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json',
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', status_code=404)
@@ -25,6 +27,7 @@ def test_get_artifact_not_found(requests_mock, tmp_dir):
 
 
 def test_get_artifact_by_build_number(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json',
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', text='foo')
@@ -37,6 +40,7 @@ def test_get_artifact_by_build_number(requests_mock, tmp_dir):
 
 
 def test_get_artifact_invalid_build_number(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json',
                       json={'lastCompletedBuild': {'number': 1}})
     requests_mock.get('/job/default_job/1/artifact/artifact', text='foo')
@@ -48,6 +52,7 @@ def test_get_artifact_invalid_build_number(requests_mock, tmp_dir):
 
 
 def test_get_artifact_unknown_job(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json', status_code=404)
     ret = get_artifact.get_artifact(['default_job', 'artifact'],
                                     standalone_mode=False)
@@ -55,6 +60,7 @@ def test_get_artifact_unknown_job(requests_mock, tmp_dir):
 
 
 def test_get_artifact_no_build_data(requests_mock, tmp_dir):
+    requests_mock.get('/api/json', json={'useCrumbs': False})
     requests_mock.get('/job/default_job/api/json',
                       json={'lastCompletedBuild': None})
     ret = get_artifact.get_artifact(['default_job', 'artifact'],

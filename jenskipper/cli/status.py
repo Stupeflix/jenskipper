@@ -3,7 +3,6 @@ import requests
 
 from . import decorators
 from .. import jenkins_api
-from .. import conf
 from .. import utils
 
 
@@ -25,22 +24,19 @@ def get_job_status(context, base_dir, jobs_names, status_only):
     """
     Retrieve the status of a job.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     show_job_name = (len(jobs_names) > 1)
     for job_num, job_name in enumerate(jobs_names):
         if job_num and not status_only:
             print
-        jenkins_url = _print_job_status(context, base_dir, jenkins_url,
-                                        job_name, status_only, show_job_name)
+        _print_job_status(context, session, base_dir, job_name, status_only,
+                          show_job_name)
 
 
-def _print_job_status(context, base_dir, jenkins_url, job_name, status_only,
+def _print_job_status(context, session, base_dir, job_name, status_only,
                       show_job_name):
     try:
-        job_data, jenkins_url = jenkins_api.handle_auth(base_dir,
-                                                        jenkins_api.get_object,
-                                                        jenkins_url,
-                                                        '/job/%s' % job_name)
+        job_data = jenkins_api.get_object(session, '/job/%s' % job_name)
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
             utils.sechowrap('Job not found on Jenkins server: %s' % job_name)
@@ -76,8 +72,6 @@ def _print_job_status(context, base_dir, jenkins_url, job_name, status_only,
             else:
                 job_number = 'none'
             print lines_prefix + fmt % job_number
-
-    return jenkins_url
 
 
 def _job_status(job_data):

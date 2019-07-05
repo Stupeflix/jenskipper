@@ -3,7 +3,6 @@ import click
 from . import decorators
 from . import import_
 from .. import repository
-from .. import conf
 from .. import jenkins_api
 from .. import exceptions
 from .. import utils
@@ -23,11 +22,9 @@ def fetch_new(context, base_dir, force, selected_jobs):
     You can specify which jobs to fetch with JOBS. If no JOBS are specified,
     fetch all new jobs.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
+    session = jenkins_api.auth(base_dir)
     repos_jobs = repository.get_jobs_defs(base_dir)
-    server_jobs, jenkins_url = jenkins_api.handle_auth(base_dir,
-                                                       jenkins_api.list_jobs,
-                                                       jenkins_url)
+    server_jobs = jenkins_api.list_jobs(session)
     new_jobs = set(server_jobs).difference(repos_jobs)
     if selected_jobs:
         unknown_jobs = set(selected_jobs).difference(new_jobs)
@@ -39,8 +36,8 @@ def fetch_new(context, base_dir, force, selected_jobs):
         try:
             with click.progressbar(new_jobs, label='Fetching new jobs') as bar:
                 pipes_bits, jobs_templates = import_.write_jobs_templates(
+                    session,
                     base_dir,
-                    jenkins_url,
                     bar,
                     allow_overwrite=force,
                 )

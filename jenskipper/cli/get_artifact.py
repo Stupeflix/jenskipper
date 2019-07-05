@@ -4,7 +4,6 @@ import sys
 
 from . import decorators
 from .. import jenkins_api
-from .. import conf
 from .. import utils
 
 
@@ -36,19 +35,14 @@ def get_artifact(context, base_dir, job_name, artifact, build, node_name,
     """
     Download an artifact.
     """
-    jenkins_url = conf.get(base_dir, ['server', 'location'])
-    real_build, jenkins_url = _resolve_build(context, base_dir, jenkins_url,
-                                             job_name, build)
+    session = jenkins_api.auth(base_dir)
+    real_build = _resolve_build(context, session, base_dir, job_name, build)
     print >> sys.stderr, 'Build number: %s' % real_build
-    response, jenkins_url = jenkins_api.handle_auth(
-        base_dir,
-        jenkins_api.get_artifact,
-        jenkins_url,
-        job_name,
-        real_build,
-        artifact,
-        node_name,
-    )
+    response = jenkins_api.get_artifact(session,
+                                        job_name,
+                                        real_build,
+                                        artifact,
+                                        node_name)
     try:
         response.raise_for_status()
     except requests.HTTPError:
@@ -67,18 +61,15 @@ def _write_response(response, output_file):
         output_file.write(data)
 
 
-def _resolve_build(context, base_dir, jenkins_url, job_name, build):
+def _resolve_build(context, session, base_dir, job_name, build):
     if build not in BUILD_SHORTCUTS:
         try:
-            return int(build), jenkins_url
+            return int(build)
         except ValueError:
             utils.sechowrap('Invalid build: %s' % build, fg='red')
             context.exit(1)
     try:
-        job_data, jenkins_url = jenkins_api.handle_auth(base_dir,
-                                                        jenkins_api.get_object,
-                                                        jenkins_url,
-                                                        '/job/%s' % job_name)
+        job_data = jenkins_api.get_object(session, '/job/%s' % job_name)
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
             utils.sechowrap('Unkown job: %s' % job_name)
@@ -92,4 +83,4 @@ def _resolve_build(context, base_dir, jenkins_url, job_name, build):
         utils.sechowrap('No build data found for: %s' % build, fg='red')
         context.exit(1)
     real_build = build_data['number']
-    return real_build, jenkins_url
+    return real_build
