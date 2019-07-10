@@ -2,6 +2,7 @@ import os
 import os.path as op
 
 import pytest
+import py.path
 
 
 HERE = op.dirname(__file__)
@@ -31,21 +32,28 @@ def tmp_dir(request):
 
 @pytest.fixture(scope='session', autouse=True)
 def setup_global_cli_env_vars():
-    cli_data_dir = op.join(HERE, 'cli', 'data')
-    _setup_cli_env_vars(cli_data_dir)
+    param = op.join(HERE, 'cli', 'data')
+    _setup_cli_env_vars(param)
 
 
 @pytest.fixture
 def setup_cli_env_vars(request):
     prev_vars = _setup_cli_env_vars(request.param)
-    yield
+    test_data = {k: py.path.local(os.environ[k])
+                 for k in ('JK_DIR', 'JK_USER_CONF')}
+    yield test_data
     os.environ.update(prev_vars)
 
 
-def _setup_cli_env_vars(base_dir):
+def _setup_cli_env_vars(param):
+    if isinstance(param, str):
+        base_dir = param
+        repos_name = 'repos'
+    else:
+        base_dir, repos_name = param
     prev_vars = {}
     for key, basename in [('JK_USER_CONF', 'jenskipper.conf'),
-                          ('JK_DIR', 'repos')]:
+                          ('JK_DIR', repos_name)]:
         prev_vars[key] = os.environ.get(key)
         os.environ[key] = op.join(base_dir, basename)
     return prev_vars

@@ -5,6 +5,7 @@ import click
 
 from . import decorators
 from .. import repository
+from .. import jobs
 
 
 @click.command()
@@ -16,18 +17,29 @@ def sweep(base_dir, delete):
     """
     Find unused templates in the current repository.
     """
-    # Get dead templates list and print it
-    jobs_defs = repository.get_jobs_defs(base_dir)
-    defs_templates = set(d['template'] for d in jobs_defs.values())
     templates_dir = repository.get_templates_dir(base_dir)
-    top_level_files = set(n for n in os.listdir(templates_dir)
-                          if (op.isfile(op.join(templates_dir, n)) and
-                              not n.startswith('.')))
-    dead_files = top_level_files.difference(defs_templates)
-    print '\n'.join(sorted(dead_files))
+
+    # Get all files used by templates
+    jobs_defs = repository.get_jobs_defs(base_dir)
+    pipelines = repository.get_pipelines(base_dir)
+    used_files = set()
+    for job_name, job_def in jobs_defs.items():
+        pipe_info = pipelines.get(job_name)
+        _, job_files = jobs.render_job(templates_dir, job_def['template'],
+                                       job_def['context'], pipe_info)
+        used_files.update(job_files)
+
+    # Get all files in the templates dir
+    templates_dir_files = set()
+    for dirpath, dirnames, filenames in os.walk(templates_dir):
+        templates_dir_files.update(op.join(dirpath, n)
+                                   for n in filenames
+                                   if not n.startswith('.'))
+
+    dead_files = templates_dir_files.difference(used_files)
+    print('\n'.join(op.relpath(p) for p in dead_files))
 
     # Optionally delete dead templates
     if delete:
-        for basename in dead_files:
-            path = op.join(templates_dir, basename)
+        for path in dead_files:
             os.unlink(path)

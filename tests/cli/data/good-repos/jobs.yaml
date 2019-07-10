@@ -1,0 +1,4 @@
+default_job:
+  template: default_job.txt
+  context:
+    name: job
