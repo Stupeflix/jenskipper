@@ -66,13 +66,13 @@ def extract_jinja_error(exc_info, fnames_prefix=None):
     return stack_lines, u'%s: %s' % (prefix, error_details)
 
 
-def print_jinja_error(stack_lines, error):
-    click.secho('Traceback (most recent call last):')
+def print_jinja_error(stack_lines, error, lines_prefix=''):
+    click.secho(lines_prefix + 'Traceback (most recent call last):')
     click.secho('')
     for line in stack_lines:
-        click.secho(line)
+        click.secho(lines_prefix + line)
     click.secho('')
-    click.secho(error, fg='red', bold=True)
+    click.secho(lines_prefix + error, fg='red', bold=True)
 
 
 class TrackingFileSystemLoader(jinja2.FileSystemLoader):
