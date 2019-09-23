@@ -3,6 +3,7 @@ import sys
 import jinja2
 
 from jenskipper import templates
+from jenskipper import exceptions
 
 
 def test_render(data_dir):
@@ -71,3 +72,17 @@ def test_track_includes(data_dir):
         data_dir.join('template_with_include.txt'),
         data_dir.join('template.txt')
     }
+
+
+def test_template_with_raise(data_dir):
+    tpl_name = 'template_with_raise.txt'
+    try:
+        templates.render(unicode(data_dir), tpl_name, {})
+    except exceptions.TemplateUserError:
+        stack, error = templates.extract_jinja_error(sys.exc_info())
+    tpl_path = data_dir.join(tpl_name)
+    assert stack == [
+        '  File "%s", line 3' % tpl_path,
+        '    {% raise "baz" %}',
+    ]
+    assert error == 'User error: baz'

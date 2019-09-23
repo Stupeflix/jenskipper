@@ -1,3 +1,6 @@
+import jinja2.exceptions
+
+
 class JenskipperError(Exception):
 
     pass
@@ -66,5 +69,13 @@ class MalformedBuildParameter(JenskipperError):
 
 
 class BuildIsNotParametrized(JenskipperError):
+
+    pass
+
+
+class TemplateUserError(jinja2.exceptions.TemplateRuntimeError):
+    """
+    Raised by the {% raise 'error' %} extension.
+    """
 
     pass
