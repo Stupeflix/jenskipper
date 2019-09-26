@@ -1,9 +1,12 @@
 import subprocess
 
+import pytest
+
 from jenskipper.cli import dirty
 from jenskipper import utils
 
 
+@pytest.mark.git
 def test_dirty_git(data_dir, tmp_dir):
     repos_dir = tmp_dir.join('repos')
     data_dir.join('repos').copy(repos_dir)
