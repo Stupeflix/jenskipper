@@ -61,6 +61,29 @@ def test_extract_hash_from_text():
     assert f('foo%s' % h) == ('fff', 'foo')
 
 
+def test_remove_disabled_flag():
+    xml = '<project><disabled>false</disabled></project>'
+    assert jobs.remove_disabled_flag(xml) == '<project />'
+
+
+def test_transfuse_disabled_flag_replace():
+    from_xml = '<project><disabled>false</disabled></project>'
+    to_xml = '<project><disabled>true</disabled></project>'
+    assert jobs.transfuse_disabled_flag(from_xml, to_xml) == from_xml
+
+
+def test_transfuse_disabled_flag_add():
+    from_xml = '<project><disabled>false</disabled></project>'
+    to_xml = '<project></project>'
+    assert jobs.transfuse_disabled_flag(from_xml, to_xml) == from_xml
+
+
+def test_transfuse_disabled_flag_noop():
+    from_xml = '<project></project>'
+    to_xml = '<project><disabled>true</disabled></project>'
+    assert jobs.transfuse_disabled_flag(from_xml, to_xml) == to_xml
+
+
 JOB_WITHOUT_PIPELINE = """<?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>

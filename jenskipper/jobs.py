@@ -168,3 +168,45 @@ def extract_hash_from_text(text):
     else:
         conf_hash = None
     return conf_hash, text
+
+
+def remove_disabled_flag(conf):
+    """
+    Remove the <disabled> tag from *conf* XML.
+    """
+    tree = utils.parse_xml(conf)
+    _do_remove_disabled_flag(tree)
+    return utils.render_xml(tree)
+
+
+def _get_disabled_elt(tree):
+    return tree.find('.//disabled')
+
+
+def _do_remove_disabled_flag(tree):
+    disabled_elt = _get_disabled_elt(tree)
+    if disabled_elt is not None:
+        elt_index = list(tree).index(disabled_elt)
+        tree.remove(disabled_elt)
+    else:
+        elt_index = -1
+    return elt_index
+
+
+def transfuse_disabled_flag(from_conf, to_conf):
+    """
+    Transfuse the <disabled> tag from *from_conf* to *to_conf*.
+
+    This means that we put whatever <disabled> tag there is in *from_conf* in
+    *put_conf*. Leave the <disabled> tag unchanged if it's not present in
+    *from_conf*.
+
+    Return *to_conf* with the transfused tag.
+    """
+    from_tree = utils.parse_xml(from_conf)
+    to_tree = utils.parse_xml(to_conf)
+    transfused_elt = _get_disabled_elt(from_tree)
+    if transfused_elt is not None:
+        elt_index = _do_remove_disabled_flag(to_tree)
+        to_tree.insert(elt_index, transfused_elt)
+    return utils.render_xml(to_tree)

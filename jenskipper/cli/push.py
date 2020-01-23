@@ -108,6 +108,9 @@ def _push_jobs(session, jobs_names, progress_bar, base_dir, pipelines,
                                         job_def['context'], pipe_info,
                                         insert_hash=True,
                                         context_overrides=context_overrides)
+        if conf.get(base_dir, ['server', 'disable_jobs_from_gui']):
+            server_conf = jenkins_api.get_job_config(session, job_name)
+            final_conf = jobs.transfuse_disabled_flag(server_conf, final_conf)
         try:
             jenkins_api.push_job_config(
                 session,

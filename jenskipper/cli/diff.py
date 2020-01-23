@@ -14,6 +14,7 @@ from .. import repository
 from .. import jenkins_api
 from .. import jobs
 from .. import exceptions
+from .. import conf
 
 
 logger = logging.getLogger(__name__)
@@ -102,10 +103,10 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
     local_xml, _ = repository.get_job_conf(base_dir, job_name,
                                            context_overrides)
     with utils.add_lxml_syntax_error_context(local_xml, job_name):
-        local_xml = _prepare_xml(local_xml)
+        local_xml = _prepare_xml(base_dir, local_xml)
     remote_xml = jenkins_api.get_job_config(session, job_name)
     with utils.add_lxml_syntax_error_context(remote_xml, job_name):
-        remote_xml = _prepare_xml(remote_xml)
+        remote_xml = _prepare_xml(base_dir, remote_xml)
     from_text = remote_xml
     to_text = local_xml
     from_file = 'remote/%s.xml' % job_name
@@ -118,11 +119,13 @@ def get_job_diff(session, base_dir, job_name, context_overrides=None,
     return list(diff)
 
 
-def _prepare_xml(xml):
+def _prepare_xml(base_dir, xml):
     xml = utils.clean_xml(xml)
     xml = utils.unescape_xml(xml)
     xml = xml.replace('\r\n', '\n')
     _, xml = jobs.extract_hash_from_description(xml)
+    if conf.get(base_dir, ['server', 'disable_jobs_from_gui']):
+        xml = jobs.remove_disabled_flag(xml)
     return xml.splitlines(True)
 
 
