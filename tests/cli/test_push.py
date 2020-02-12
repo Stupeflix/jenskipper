@@ -1,6 +1,12 @@
+import os.path as op
+
 from click.testing import CliRunner
+import pytest
 
 from jenskipper.cli import push
+
+
+HERE = op.dirname(__file__)
 
 
 def test_push(requests_mock):
@@ -54,3 +60,17 @@ def test_push_job_modified_in_gui(requests_mock):
     requests_mock.get('/job/default_job/config.xml', text=server_xml)
     requests_mock.post('/job/default_job/config.xml')
     assert push.push(['default_job'], standalone_mode=False) == 1
+
+
+@pytest.mark.parametrize('setup_cli_env_vars', [op.join(HERE, 'tmp')],
+                         indirect=True)
+def test_push_new_job_with_disable_jobs_from_gui(requests_mock, data_dir,
+                                                 tmp_dir, setup_cli_env_vars):
+    data_dir.copy(tmp_dir)
+    tmp_dir.join('repos', '.jenskipper.conf') \
+           .write('disable_jobs_from_gui = true\n', 'at')
+    requests_mock.get('/api/json', json={'useCrumbs': False})
+    requests_mock.get('/job/default_job/config.xml', status_code=404)
+    requests_mock.post('/job/default_job/config.xml', status_code=404)
+    requests_mock.post('/createItem?name=default_job')
+    assert push.push(['default_job'], standalone_mode=False) is None
